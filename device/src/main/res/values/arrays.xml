@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="positions">
+        <item></item>
+        <item>车站</item>
+        <item>道口</item>
+        <item>机房</item>
+        <item>调度所</item>
+        <item>其他</item>
+    </string-array>
+
+    <string-array name="states">
+        <item>其他</item>
+        <item>在道</item>
+        <item>在修</item>
+        <item>备品</item>
+        <item>废品</item>
+    </string-array>
+</resources>

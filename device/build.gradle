@@ -1,0 +1,56 @@
+apply plugin: 'com.android.application'
+
+android {
+    signingConfigs {
+        forDebug {
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+            storeFile file('/media/zqw/BB82-E0ED/Device/闻风签名/debug.keystore')
+            storePassword 'android'
+        }
+        forRelease {
+            keyAlias 'wefeel'
+            keyPassword 'wefeel.cn'
+            storeFile file('/media/zqw/BB82-E0ED/Device/闻风签名/Wefeel.keystore')
+            storePassword 'wefeel.cn'
+        }
+    }
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    defaultConfig {
+        applicationId 'cn.wefeel.device'
+        minSdkVersion 19
+        targetSdkVersion 25
+        versionCode 11
+        versionName '2.01'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            signingConfig signingConfigs.forDebug
+        }
+    }
+    productFlavors {
+    }
+    useLibrary 'org.apache.http.legacy'
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    testCompile 'junit:junit:4.12'
+    compile 'org.xutils:xutils:3.3.40'
+    compile 'com.android.support:design:25.1.0'
+    compile 'com.android.support:appcompat-v7:25.1.0'
+    compile 'com.google.zxing:core:3.3.0'
+    //    compile 'com.journeyapps:zxing-android-integration:2.0.1@aar'
+    //    compile 'com.journeyapps:zxing-android-legacy:2.0.1@aar'
+    compile 'com.journeyapps:zxing-android-embedded:3.0.2@aar'
+    compile project(path: ':softwareupgrader')
+}

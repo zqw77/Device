@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">电务设备</string>
+    <string name="action_scan">扫码</string>
+    <string name="action_add">新增</string>
+    <string name="action_sync">文件同步</string>
+    <string name="action_netsync">网络同步</string>
+    <string name="action_upgrade">升级</string>
+    <string name="action_exit">退出</string>
+    <string name="search">查找</string>
+    <string name="hint_search">输入编号、名称或类型</string>
+    <string name="hint_id">自动唯一编号</string>
+    <string name="hint_code">设备编码</string>
+    <string name="hint_name">设备名称</string>
+    <string name="hint_station">站名</string>
+    <string name="hint_orgname">所在机构</string>
+    <string name="hint_state">设备状态</string>
+    <string name="hint_posflag">设备位置</string>
+    <string name="hint_type">设备类型</string>
+    <string name="hint_producer">厂家及联锁制式</string>
+    <string name="hint_model">设备型号</string>
+    <string name="hint_unit">单位</string>
+    <string name="hint_online">上道日期</string>
+    <string name="hint_life">使用寿命</string>
+    <string name="hint_log">维修记录</string>
+    <string name="action_save">保存</string>
+    <string name="action_delete">删除</string>
+    <string name="action_newlog">新增维修记录</string>
+    <string name="title_activity_edit">编辑</string>
+    <string name="hint_scan">扫描设备上的二维码或条形码</string>
+    <string name="title_activity_search">搜索</string>
+    <string name="action_editlog">修改维修记录</string>
+    <string name="action_deletelog">删除维修记录</string>
+    <string name="title_activity_sync">数据同步</string>
+    <string name="title_activity_select">选择</string>
+    <string name="title_activity_log">维修记录</string>
+    <string name="hint_searchresult">符合条件的设备共有: %1$d个</string>
+    <string name="action_viewlog">数据更新日志</string>
+    <string name="hint_author">We feel with heart! @2015</string>
+    <string name="hint_welcome">信息化提高效率</string>
+    <string name="hint_version">1.0</string>
+    <string name="title_nodevice">没有符合条件的设备</string>
+    <string name="hint_nodevice">没有找到设备:%s</string>
+    <string name="hint_noupdatelog">还没有数据更新日志！</string>
+    <string name="title_nolog">该设备无维修记录</string>
+
+
+</resources>
