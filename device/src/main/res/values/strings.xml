@@ -32,7 +32,7 @@
     <string name="action_deletelog">删除维修记录</string>
     <string name="title_activity_sync">数据同步</string>
     <string name="title_activity_select">选择</string>
-    <string name="title_activity_log">维修记录</string>
+    <string name="title_activity_log">共%1$d条维修记录</string>
     <string name="hint_searchresult">符合条件的设备共有: %1$d个</string>
     <string name="action_viewlog">数据更新日志</string>
     <string name="hint_author">We feel with heart! @2015</string>
@@ -42,6 +42,41 @@
     <string name="hint_nodevice">没有找到设备:%s</string>
     <string name="hint_noupdatelog">还没有数据更新日志！</string>
     <string name="title_nolog">该设备无维修记录</string>
+    <string name="message_device">
+        <![CDATA[<b>设备编码：</b>%1$s
+        <br/><b>设备名称：</b>%2$s
+        <br/><b>归属部门：</b>%3$s
+        <br/><b>设备型号：</b>%4$s
+        <br/><b>生产厂家：</b>%5$s
+        <br/><b>设备类型：</b>%6$s
+        <br/><b>所在位置：</b>%7$s
+        <br/><b>所在车站：</b>%8$s
+        <br/><b>上道日期：</b>%9$s
+        <br/><b>设备状态：</b>%10$s
+        <br/><b>计量单位：</b>%11$s
+        <br/><b>使用寿命：</b>%12$s]]></string>
+    <string name="all_station">(全部车站)</string>
+    <string name="all_orgname">(全部车间)</string>
+    <string name="title_select_station">请选择车站</string>
+    <string name="title_select_orgname">请选择车间</string>
+
+    <string name="title_download">数据更新</string>
+    <string name="hint_downnew">发现远端服务器上有新的数据，建议您下载新的数据。</string>
+    <string name="hint_downnew_ok">下载新数据</string>
+    <string name="hint_downnew_cancel">以后再说</string>
+
+    <string name="hint_downagain">您手机上的数据与远端服务器上的相同，没有必要下载了。你还想重新下载吗？</string>
+    <string name="hint_downagain_ok">重新下载</string>
+    <string name="hint_downagain_cancel">不下载了</string>
+
+    <string name="hint_traffic">下载数据需要消耗十几兆流量，确定继续吗？</string>
+    <string name="hint_traffic_ok">继续下载</string>
+    <string name="hint_traffic_cancel">不下载了</string>
+
+    <string name="hint_attention">注意</string>
+    <string name="hint_download_exit">正在下载和导入数据，退出会导致数据不完整，确定吗？</string>
+    <string name="hint_ok">确定</string>
+    <string name="hint_cancel">取消</string>
 
 
 </resources>

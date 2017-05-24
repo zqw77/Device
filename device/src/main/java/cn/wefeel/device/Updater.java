@@ -68,24 +68,24 @@ public class Updater {
     private static void showDialog(boolean haveNewData) {
         String message, positiveText, negativeText;
         if (haveNewData) {
-            message = "发现远端服务器上有新的数据，建议您下载新的数据。";
-            positiveText = "下载新数据";
-            negativeText = "以后再说";
+            message = mContext.getString(R.string.hint_downnew);
+            positiveText = mContext.getString(R.string.hint_downnew_ok);
+            negativeText = mContext.getString(R.string.hint_downnew_cancel);
         } else {
-            message = "您手机上的数据与远端服务器上的相同，没有必要下载了。你还想重新下载吗？";
-            positiveText = "重新下载";
-            negativeText = "不下载了";
+            message = mContext.getString(R.string.hint_downagain);
+            positiveText = mContext.getString(R.string.hint_downagain_ok);
+            negativeText = mContext.getString(R.string.hint_downnew_cancel);
         }
         Builder builder = new Builder(mContext);
-        builder.setTitle("数据更新");
+        builder.setTitle(R.string.title_download);
         builder.setMessage(message);
         builder.setPositiveButton(positiveText, new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                Intent intent1 = new Intent(mContext, UpdateActivity.class); //
-                intent1.putExtra("fileTimes", fileTimes);
-                ((MainActivity) mContext).startActivityForResult(intent1, 201);
+                Intent intent = new Intent(mContext, UpdateActivity.class); //
+                intent.putExtra("fileTimes", fileTimes);
+                ((MainActivity) mContext).startActivityForResult(intent, 201);
             }
         });
         builder.setNegativeButton(negativeText, new OnClickListener() {

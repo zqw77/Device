@@ -54,7 +54,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onViewClick(MagnetImageView view) {
                 //检查数据更新
-                Updater.check(view.getContext(), false);
+                Updater.check(MainActivity.this, false);
             }
         });
         MagnetImageView mvUpgrade = (MagnetImageView) this.findViewById(R.id.mvUpgrade);
@@ -63,7 +63,7 @@ public class MainActivity extends BaseActivity {
             @Override
             public void onViewClick(MagnetImageView view) {
                 //检查软件升级
-                Upgrader.check(view.getContext(), Constants.UPGRADE_FILE, Upgrader.NO_KEEP_SILENT);
+                Upgrader.check(MainActivity.this, Constants.UPGRADE_FILE, Upgrader.NO_KEEP_SILENT);
             }
         });
         //设置扫描按钮

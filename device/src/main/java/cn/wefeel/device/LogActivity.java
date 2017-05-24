@@ -32,7 +32,7 @@ public class LogActivity extends AppCompatActivity {
 
         listView1.setAdapter(adapter);
         //显示搜索总数
-        this.setTitle("维修记录" + String.valueOf(listView1.getCount()));
+        this.setTitle(getString(R.string.title_activity_log, listView1.getCount()));
 
         listView1.setOnItemClickListener(new OnItemClickListener() {
             @Override

@@ -140,12 +140,12 @@ public class UpdateActivity extends Activity {
 
     private void confirmDownload() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("下载数据需要消耗十几兆流量，确定继续吗？")
-                .setPositiveButton("继续下载", new DialogInterface.OnClickListener() {
+        builder.setMessage(R.string.hint_traffic)
+                .setPositiveButton(R.string.hint_traffic_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         downloadService.startDownload();//开始下载
                     }
-                }).setNegativeButton("不下载了", new DialogInterface.OnClickListener() {
+                }).setNegativeButton(R.string.hint_traffic_cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
 //				sendMessage(INFO,"不下载了，已取消数据同步");
                 finish();
@@ -190,16 +190,16 @@ public class UpdateActivity extends Activity {
             case KeyEvent.KEYCODE_BACK:
                 if (downloadService.isRunning > 0) {
                     AlertDialog.Builder build = new AlertDialog.Builder(this);
-                    build.setTitle("注意")
-                            .setMessage("正在下载和导入数据，退出会导致数据不完整，确定吗？")
-                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    build.setTitle(R.string.hint_attention)
+                            .setMessage(R.string.hint_download_exit)
+                            .setPositiveButton(R.string.hint_ok, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     downloadService.isCanceled = true;
                                     finish();
                                 }
                             })
-                            .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                            .setNegativeButton(R.string.hint_cancel, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                 }

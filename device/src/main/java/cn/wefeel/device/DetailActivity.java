@@ -6,6 +6,7 @@ import java.util.List;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -41,23 +42,37 @@ public class DetailActivity extends BaseActivity {
         Device device = db.getDevice(mCode);
         if (device != null) {
             //显示设备信息
-            String info = "";
-            info += "设备编码：" + device.code;
-            info += "\n设备名称：" + device.name;
-            info += "\n归属部门：" + device.orgname;
-            info += "\n设备型号：" + device.model;
-            info += "\n生产厂家：" + device.producer;
-            info += "\n设备类型：" + device.type;
-            info += "\n所在位置：" + getResources().getStringArray(R.array.positions)[device.posflag];//posNames[device.posflag]+;
-            info += "\n所在车站：" + device.station;
-            info += "\n上道日期：" + device.online;
-            info += "\n设备状态：" + getResources().getStringArray(R.array.states)[device.state];
-            info += "\n计量单位：" + device.unit;
-            info += "\n使用寿命：" + device.life;
-            tvDeviceInfo.setText(info);
+            String info = getString(R.string.message_device,
+                    device.code,
+                    device.name,
+                    device.orgname,
+                    device.model,
+                    device.producer,
+                    device.type,
+                    getResources().getStringArray(R.array.positions)[device.posflag],
+                    device.station,
+                    device.online,
+                    getResources().getStringArray(R.array.states)[device.state],
+                    device.unit,
+                    device.life);
+
+//            info += "<b>设备编码：</b>" + device.code;
+//            info += "<br><b>设备名称：</b>" + device.name;
+//            info += "\n归属部门：" + device.orgname;
+//            info += "\n设备型号：" + device.model;
+//            info += "\n生产厂家：" + device.producer;
+//            info += "\n设备类型：" + device.type;
+//            info += "\n所在位置：" + getResources().getStringArray(R.array.positions)[device.posflag];//posNames[device.posflag]+;
+//            info += "\n所在车站：" + device.station;
+//            info += "\n上道日期：" + device.online;
+//            info += "\n设备状态：" + getResources().getStringArray(R.array.states)[device.state];
+//            info += "\n计量单位：" + device.unit;
+//            info += "\n使用寿命：" + device.life;
+
+            tvDeviceInfo.setText(Html.fromHtml(info));
 
             //显示维修信息
-            TextView tvHeader=new TextView(this);
+            TextView tvHeader = new TextView(this);
             tvHeader.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             tvHeader.setTextColor(Color.BLUE);
             tvHeader.setText(R.string.hint_log);
@@ -72,7 +87,7 @@ public class DetailActivity extends BaseActivity {
             lvLog.setAdapter(mAdapter);
 
         } else {
-            tvDeviceInfo.setText(getString(R.string.hint_nodevice,mCode));
+            tvDeviceInfo.setText(getString(R.string.hint_nodevice, mCode));
         }
     }
 }

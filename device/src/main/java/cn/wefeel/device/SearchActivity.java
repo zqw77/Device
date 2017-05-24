@@ -29,20 +29,23 @@ import cn.wefeel.device.data.MyData;
 
 public class SearchActivity extends BaseActivity {
 
-    SearchView mSearchView;
+    String mAllStation;
+    String mAllOrgname;
+    Cursor mCursor;
+    SearchView svSearch;
     TextView tvSelectedStation;
     TextView tvSelectedOrgname;
-    public static final String ALL_STATION = "（全部车站）";
-    public static final String ALL_ORGNAME = "（全部车间）";
     ListView lvDevice;
     TextView tvHeader;
-    private Cursor mCursor;
     TabHost thSearch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        mAllStation = getString(R.string.all_station);//"（全部车站）";
+        mAllOrgname = getString(R.string.all_orgname);//"（全部车间）";
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.barTool);
         setSupportActionBar(toolbar);
@@ -54,18 +57,18 @@ public class SearchActivity extends BaseActivity {
         }
         //选择车站按钮
         tvSelectedStation = (TextView) this.findViewById(R.id.tvSelectedStation);
-        tvSelectedStation.setText(ALL_STATION);
+        tvSelectedStation.setText(mAllStation);
         Button btnSelectStation = (Button) this.findViewById(R.id.btnSelectStation);
         btnSelectStation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MyData db = new MyData();
                 ArrayList<String> stationArray = db.getStationsArray();//获取所有车站
-                stationArray.add(0, ALL_STATION);//加上“全部车站”到最前面
+                stationArray.add(0, mAllStation);//加上“全部车站”到最前面
                 final CharSequence[] stations = stationArray.toArray(new CharSequence[stationArray.size()]);
                 AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
                 builder.setIcon(android.R.drawable.ic_menu_search);//调用Android的默认搜索图标
-                builder.setTitle("请选择车站");
+                builder.setTitle(getString(R.string.title_select_station));
                 builder.setItems(stations, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -78,18 +81,18 @@ public class SearchActivity extends BaseActivity {
         });
         //选择车间按钮
         tvSelectedOrgname = (TextView) this.findViewById(R.id.tvSelectedOrgname);
-        tvSelectedOrgname.setText(ALL_ORGNAME);
+        tvSelectedOrgname.setText(mAllOrgname);
         Button btnSelectOrgname = (Button) this.findViewById(R.id.btnSelectOrgname);
         btnSelectOrgname.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 MyData db = new MyData();
                 ArrayList<String> orgnamesArray = db.getOrgnamesArray();//获取所有车间
-                orgnamesArray.add(0, ALL_ORGNAME);//加上“全部车间”到最前面
+                orgnamesArray.add(0, mAllOrgname);//加上“全部车间”到最前面
                 final CharSequence[] orgnames = orgnamesArray.toArray(new CharSequence[orgnamesArray.size()]);
                 AlertDialog.Builder builder = new AlertDialog.Builder(v.getContext());
                 builder.setIcon(android.R.drawable.ic_menu_search);//调用Android的默认搜索图标
-                builder.setTitle("请选择车间");
+                builder.setTitle(getString(R.string.title_select_orgname));
                 builder.setItems(orgnames, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -165,17 +168,17 @@ public class SearchActivity extends BaseActivity {
     private void search() {
         try {
             String state = thSearch.getCurrentTabTag();
-            String station = tvSelectedStation.getText().toString().equals(ALL_STATION) ? null : tvSelectedStation.getText().toString();
-            String orgname = tvSelectedOrgname.getText().toString().equals(ALL_ORGNAME) ? null : tvSelectedOrgname.getText().toString();
+            String station = tvSelectedStation.getText().toString().equals(mAllStation) ? null : tvSelectedStation.getText().toString();
+            String orgname = tvSelectedOrgname.getText().toString().equals(mAllOrgname) ? null : tvSelectedOrgname.getText().toString();
             String key = null;
-            if (mSearchView != null) {//search()如在菜单生成前调用就会null
-                key = mSearchView.getQuery().toString();
+            if (svSearch != null) {//search()如在菜单生成前调用就会null
+                key = svSearch.getQuery().toString();
             }
 
-            long start=System.nanoTime();
+            long start = System.nanoTime();
             if (mCursor != null) mCursor.close();
             mCursor = (new MyData()).queryDevice(Integer.valueOf(state), station, orgname, key);
-            Log.e(TAG,"查询时间："+String.valueOf(System.nanoTime()-start));
+//            Log.e(TAG,"查询时间："+String.valueOf(System.nanoTime()-start));
 //            List<HashMap<String, Object>> mapList = (new MyData()).loadDevice();效率太低不能用
 //            SimpleAdapter adapter = new SimpleAdapter(this.getContext(), mapList, R.layout.item_device, from, to);
             String[] from = {"code", "station", "orgname", "type", "name", "producer", "model", "online"};
@@ -184,7 +187,7 @@ public class SearchActivity extends BaseActivity {
 
             tvHeader.setText(getString(R.string.hint_searchresult, adapter.getCount()));
             lvDevice.setAdapter(adapter);
-            Log.e(TAG,"填充时间："+String.valueOf(System.nanoTime()-start));
+//            Log.e(TAG,"填充时间："+String.valueOf(System.nanoTime()-start));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -194,11 +197,11 @@ public class SearchActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_search, menu);
         MenuItem menuItem = menu.findItem(R.id.action_search);//
-        mSearchView = (SearchView) MenuItemCompat.getActionView(menuItem);//加载searchview
-        mSearchView.setSubmitButtonEnabled(true);//设置是否显示搜索按钮
-        mSearchView.setQueryHint(getString(R.string.hint_search));//设置提示信息
-        mSearchView.setIconifiedByDefault(true);//设置搜索默认为图标
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        svSearch = (SearchView) MenuItemCompat.getActionView(menuItem);//加载searchview
+        svSearch.setSubmitButtonEnabled(true);//设置是否显示搜索按钮
+        svSearch.setQueryHint(getString(R.string.hint_search));//设置提示信息
+        svSearch.setIconifiedByDefault(true);//设置搜索默认为图标
+        svSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 return false;
