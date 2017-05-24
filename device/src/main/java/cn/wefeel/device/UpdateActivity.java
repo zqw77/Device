@@ -1,6 +1,5 @@
 package cn.wefeel.device;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
@@ -19,10 +18,11 @@ import android.widget.TextView;
 
 import java.io.FileOutputStream;
 
-import cn.wefeel.device.data.MyData;
 import cn.wefeel.device.UpdateService.OnCallback;
+import cn.wefeel.device.base.BaseActivity;
+import cn.wefeel.device.data.MyData;
 
-public class UpdateActivity extends Activity {
+public class UpdateActivity extends BaseActivity {
     private Context mContext;// 父Activity
     private TextView tvInfo;
     private ScrollView scrollView1;
@@ -145,12 +145,12 @@ public class UpdateActivity extends Activity {
                     public void onClick(DialogInterface dialog, int which) {
                         downloadService.startDownload();//开始下载
                     }
-                }).setNegativeButton(R.string.hint_traffic_cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-//				sendMessage(INFO,"不下载了，已取消数据同步");
-                finish();
-            }
-        }).setOnCancelListener(new OnCancelListener() {
+                })
+                .setNegativeButton(R.string.hint_traffic_cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                }).setOnCancelListener(new OnCancelListener() {
             @Override
             public void onCancel(DialogInterface arg0) {
                 finish();
@@ -163,7 +163,7 @@ public class UpdateActivity extends Activity {
         //写日志文件
         try {
             // 打开文件获取输出流，文件不存在则自动创建
-            FileOutputStream fos = openFileOutput(Constants.UPDATELOG_FILE_NAME,Context.MODE_PRIVATE);
+            FileOutputStream fos = openFileOutput(Constants.UPDATELOG_FILE_NAME, Context.MODE_PRIVATE);
             fos.write(tvInfo.getText().toString().getBytes());
             fos.close();
         } catch (Exception e) {

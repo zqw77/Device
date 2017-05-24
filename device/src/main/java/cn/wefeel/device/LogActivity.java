@@ -1,25 +1,27 @@
 package cn.wefeel.device;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+
+import org.xutils.view.annotation.ContentView;
+
 import java.util.HashMap;
 import java.util.List;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.AdapterView.OnItemClickListener;
-
+import cn.wefeel.device.base.BaseActivity;
 import cn.wefeel.device.data.MyData;
 
-public class LogActivity extends AppCompatActivity {
+@ContentView(R.layout.activity_log)
+public class LogActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_log);
 
         ListView listView1 = (ListView) this.findViewById(R.id.listView1);
 
