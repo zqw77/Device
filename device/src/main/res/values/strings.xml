@@ -6,6 +6,7 @@
     <string name="action_netsync">网络同步</string>
     <string name="action_upgrade">升级</string>
     <string name="action_exit">退出</string>
+    <string name="action_share">分享</string>
     <string name="search">查找</string>
     <string name="hint_search">输入编号、名称或类型</string>
     <string name="hint_id">自动唯一编号</string>
@@ -78,5 +79,7 @@
     <string name="hint_ok">确定</string>
     <string name="hint_cancel">取消</string>
 
+    <string name="title_share">分享一下</string>
+    <string name="subject_share">设备信息</string>
 
 </resources>

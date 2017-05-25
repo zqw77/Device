@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.text.Html;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -89,5 +91,23 @@ public class DetailActivity extends BaseActivity {
         } else {
             tvDeviceInfo.setText(getString(R.string.hint_nodevice, mCode));
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_share, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if( item.getItemId()==R.id.action_share ){  //分享功能
+            Intent share = new Intent(android.content.Intent.ACTION_SEND);
+            share.setType("text/plain");
+            share.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.subject_share));
+            share.putExtra(Intent.EXTRA_TEXT, tvDeviceInfo.getText().toString());
+            startActivity(Intent.createChooser(share, getString(R.string.title_share)));
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
