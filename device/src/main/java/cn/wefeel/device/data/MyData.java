@@ -5,6 +5,7 @@ import android.database.Cursor;
 
 import org.xutils.DbManager;
 import org.xutils.db.sqlite.SqlInfo;
+import org.xutils.db.sqlite.WhereBuilder;
 import org.xutils.db.table.DbModel;
 
 import java.lang.reflect.Field;
@@ -58,16 +59,6 @@ public class MyData {
         return device;
     }
 
-    ////读取所有Device信息
-    public List<Device> loadDevicexx() {
-        List<Device> list = null;
-        try {
-            list = mDbManager.selector(Device.class).findAll();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
     /**
      * 获取SimpleAdapter要用的Device信息（效率太低，不能用）
@@ -99,7 +90,7 @@ public class MyData {
     public List<HashMap<String, Object>> getLog(String code) {
         List<HashMap<String, Object>> mapList = new ArrayList<HashMap<String, Object>>();
         try {
-            List<Log> list = mDbManager.selector(Log.class).where("code","=",code).findAll();
+            List<Log> list = mDbManager.selector(Log.class).where("code", "=", code).findAll();
             Field[] fields = Log.class.getDeclaredFields();
             for (int i = 0; i < list.size(); i++) {
                 if (!(list.get(i) instanceof Map)) {
@@ -118,6 +109,7 @@ public class MyData {
 
     /**
      * 获取SimpleCursorAdapter要用的全部Log
+     *
      * @return
      */
     public List<HashMap<String, Object>> loadLog() {
@@ -140,14 +132,14 @@ public class MyData {
         return mapList;
     }
 
-    public ContentValues getCountByState(){
-        ContentValues values=new ContentValues();
+    public ContentValues getCountByState() {
+        ContentValues values = new ContentValues();
         Cursor c = null;
         try {
             c = mDbManager.execQuery("SELECT state,COUNT(*) FROM device GROUP BY state ORDER BY state");
             if (c != null) {
                 for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-                    values.put(c.getString(0),c.getInt(1));
+                    values.put(c.getString(0), c.getInt(1));
 //                    counts[c.getInt(0)] = c.getInt(1);
                 }
             }
@@ -158,6 +150,7 @@ public class MyData {
         }
         return values;
     }
+
     ////按state计算每类设备的数量
     public int[] countByState() {
         int[] counts = new int[5];//state不能超过5，否则出错
@@ -178,18 +171,18 @@ public class MyData {
     }
 
     public ArrayList<String> getStationsArray() {
-        List<DbModel> dbModels=getDbModelsList("station");
-        ArrayList<String> results=new ArrayList<String>();
-        for (DbModel dbModel:dbModels) {
+        List<DbModel> dbModels = getDbModelsList("station");
+        ArrayList<String> results = new ArrayList<String>();
+        for (DbModel dbModel : dbModels) {
             results.add(dbModel.getString("value"));
         }
         return results;
     }
 
     public ArrayList<String> getOrgnamesArray() {
-        List<DbModel> dbModels=getDbModelsList("orgname");
-        ArrayList<String> results=new ArrayList<String>();
-        for (DbModel dbModel:dbModels) {
+        List<DbModel> dbModels = getDbModelsList("orgname");
+        ArrayList<String> results = new ArrayList<String>();
+        for (DbModel dbModel : dbModels) {
             results.add(dbModel.getString("value"));
         }
         return results;
@@ -201,7 +194,7 @@ public class MyData {
         try {
             dbModels = mDbManager.findDbModelAll(new SqlInfo(sql));
         } catch (Exception e) {
-            dbModels=new ArrayList<DbModel>();
+            dbModels = new ArrayList<DbModel>();
         }
         return dbModels;
     }
@@ -235,6 +228,78 @@ public class MyData {
             e.printStackTrace();
         }
         return c;
+    }    ///查询设备
+
+    public Cursor queryDevice(int offset, int rows, int state, String station, String orgname, String key) {
+        String where = " WHERE a.flag<>3 AND state=" + state;
+        if (station != null) {
+            where += " AND station='" + station + "'"; //传递了station的情况都是非备品
+        }
+        if (orgname != null) {
+            where += " AND orgname='" + orgname + "'"; //传递了orgname的情况都是备品
+        }
+        if (key != null) {
+            where += " AND ((a.code LIKE '" + key + "%') OR (type LIKE '%" + key + "%') OR (name LIKE '%" + key + "%'))";
+        }
+        String sql = "SELECT CAST(a.code AS INT) AS _id,a.*," +
+                "(CASE posflag WHEN 1 THEN '车站'" +
+                " WHEN 2 THEN '道口'" +
+                " WHEN 3 THEN '机房'" +
+                " WHEN 4 THEN '调度所'" +
+                " WHEN 5 THEN '其他'" +
+                " ELSE '其他' END) AS posname" +
+                " FROM device a"
+                + where;
+
+        String limit = " LIMIT " + String.valueOf(offset) + "," + String.valueOf(rows);
+        sql += limit;
+        Cursor c = null;
+        try {
+            c = mDbManager.execQuery(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return c;
+    }
+
+    ////读取所有Device信息
+    public List<Device> loadDevice(int offset, int rows, int state, String station, String orgname, String key) {
+        WhereBuilder where=getWhere(state,station,orgname,key);
+        List<Device> list = null;
+        try {
+            list = mDbManager.selector(Device.class).where(where).offset(offset).limit(rows).findAll();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+    public long countDevice( int state, String station, String orgname, String key){
+        WhereBuilder where=getWhere(state,station,orgname,key);
+        long count=0;
+        try {
+            count = mDbManager.selector(Device.class).where(where).count();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return count;
+    }
+    private WhereBuilder getWhere(int state, String station, String orgname, String key){
+        WhereBuilder where=WhereBuilder.b();
+        where.and("flag","<>",3);
+        where.and("state","=",state);
+        if (station != null) {
+            where.and("station", "=", station);
+        }
+        if (orgname != null) {
+            where.and("orgname", "=", orgname);
+        }
+        if (key != null) {
+            WhereBuilder where2=WhereBuilder.b("code", "like", key + "%");
+            where2.or("type", "like", "%" + key + "%");
+            where2.or("name", "like", "%" + key + "%");
+            where.and(where2);
+        }
+        return where;
     }
 
     private void zap(Class<?> entityType) {

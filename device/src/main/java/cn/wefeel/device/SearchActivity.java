@@ -1,43 +1,68 @@
 package cn.wefeel.device;
 
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.ProgressBar;
 import android.widget.TabHost;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import cn.wefeel.device.base.BaseActivity;
 import cn.wefeel.device.data.MyData;
+import cn.wefeel.device.entity.Device;
 
 public class SearchActivity extends BaseActivity {
 
     String mAllStation;
     String mAllOrgname;
-    Cursor mCursor;
+    String[] mStates;//状态中文
+
     SearchView svSearch;
     TextView tvSelectedStation;
     TextView tvSelectedOrgname;
     ListView lvDevice;
     TextView tvHeader;
     TabHost thSearch;
+
+    DeviceAdapter mAdapter = new DeviceAdapter();
+    Cursor mCursor;
+    Handler mHandler;
+
+    int mState;
+    String mStation;
+    String mOrgname;
+    String mKey = null;
+    static final int MAXROWS = 100;
+    String mHeader;
+
+    private final ViewGroup.LayoutParams mProgressBarLayoutParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
+    private final ViewGroup.LayoutParams mTipContentLayoutParams = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +71,7 @@ public class SearchActivity extends BaseActivity {
 
         mAllStation = getString(R.string.all_station);//"（全部车站）";
         mAllOrgname = getString(R.string.all_orgname);//"（全部车间）";
+        mStates = getResources().getStringArray(R.array.states);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.barTool);
         setSupportActionBar(toolbar);
@@ -110,32 +136,52 @@ public class SearchActivity extends BaseActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 //显示明细
-                Cursor c = (Cursor) parent.getItemAtPosition(position);
-                String code = c.getString(c.getColumnIndex("code"));
+//                Cursor c = (Cursor) parent.getItemAtPosition(position);
+//                String code = c.getString(c.getColumnIndex("code"));
+                Device device = (Device) parent.getItemAtPosition(position);
                 Intent intent = new Intent(view.getContext(), DetailActivity.class);
-                intent.putExtra("code", code);
+                intent.putExtra("code", device.code);
                 startActivity(intent);
             }
         });
-        tvHeader = new TextView(this);
-        tvHeader.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        tvHeader.setTextColor(Color.BLUE);
-        tvHeader.setOnClickListener(null);
-        lvDevice.addHeaderView(tvHeader);
+//        tvHeader = new TextView(this);
+//        tvHeader.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+//        tvHeader.setTextColor(Color.BLUE);
+//        tvHeader.setOnClickListener(null);
+//        lvDevice.addHeaderView(tvHeader);
 
-        //按状态统计设备数量
-        MyData db = new MyData();
-        final ContentValues values = db.getCountByState();
+        /**
+         * "加载项"布局，此布局被添加到ListView的Footer中。
+         */
+        final LinearLayout mLoadLayout = new LinearLayout(this);
+        mLoadLayout.setMinimumHeight(60);
+        mLoadLayout.setGravity(Gravity.CENTER);
+        mLoadLayout.setOrientation(LinearLayout.HORIZONTAL);
+        /**
+         * 向"加载项"布局中添加一个圆型进度条。
+         */
+        ProgressBar mProgressBar = new ProgressBar(this);
+        mProgressBar.setPadding(0, 0, 15, 0);
+        mLoadLayout.addView(mProgressBar, mProgressBarLayoutParams);
+        /**
+         * 向"加载项"布局中添加提示信息。
+         */
+        TextView mTipContent = new TextView(this);
+        mTipContent.setText("加载中...");
+        mLoadLayout.addView(mTipContent, mTipContentLayoutParams);
+        /**
+         * 将"加载项"布局添加到ListView组件的Footer中。
+         */
+//        lvDevice.addFooterView(mLoadLayout);
+
+
         //显示tab标签
         thSearch = (TabHost) findViewById(R.id.thSearch);
         thSearch.setup();
-        final String[] states = getResources().getStringArray(R.array.states);
-        for (int i = 1; i < states.length; i++) {
+        for (int i = 1; i < mStates.length; i++) {
             String key = String.valueOf(i);
-            String label = values.getAsString(key);
-            if (label == null) label = "0";//避免显示null
             TabHost.TabSpec tab = thSearch.newTabSpec(key);
-            tab.setIndicator(states[i] + "\n(" + label + ")");
+            tab.setIndicator(mStates[i]);
             tab.setContent(R.id.tab1);//因界面相同都指向同一个tab1
             thSearch.addTab(tab);
         }
@@ -147,6 +193,61 @@ public class SearchActivity extends BaseActivity {
                 search();
             }
         });
+
+        //处理列表滚动操作
+        lvDevice.setOnScrollListener(new AbsListView.OnScrollListener() {
+            private boolean isBottom = false;    //用于标记是否到达顶端
+
+            //listview的状态发送改变时执行
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if (isBottom && scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE) {
+
+                    lvDevice.addFooterView(mLoadLayout);//显示加载中
+                    final AbsListView myview = view;
+                    //可以不用线程直接执行，没啥影响
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            MyData myData = new MyData();
+                            List<Device> list = myData.loadDevice(myview.getCount() - 1, MAXROWS, mState, mStation, mOrgname, mKey);
+                            mAdapter.getList().addAll(list);//因为加了headerview所以不能用lvDeivce.getAdapter，多次转换还不如用mAdapter
+                            mAdapter.notifyDataSetChanged();
+                            isBottom = false;
+                            lvDevice.removeFooterView(mLoadLayout);//不显示加载中
+                        }
+                    }, 0);//设置延时大点就能看到footerview
+                }
+            }
+
+            //在滚动的过程中不断执行
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+//                System.out.println(firstVisibleItem + ":" + visibleItemCount + ":" + totalItemCount);
+                if (firstVisibleItem + visibleItemCount == totalItemCount) {
+                    isBottom = true;
+                } else {
+                    isBottom = false;
+                }
+            }
+        });
+
+        //按状态统计设备数量，用线程来操作，不会打开窗口慢
+        mHandler = new Handler() {
+            @Override
+            public void handleMessage(Message msg) {
+                super.handleMessage(msg);
+                if (msg.what == 0) {    //刷新界面
+                    for (int i = 0; i < thSearch.getTabWidget().getTabCount(); i++) {
+                        TextView tvTitle = (TextView) thSearch.getTabWidget().getChildTabViewAt(i).findViewById(android.R.id.title);
+                        tvTitle.setText(mStates[i + 1]);
+                    }
+//                    tvHeader.setText(mHeader);
+                    lvDevice.setAdapter(mAdapter);
+                }
+            }
+        };
+
         search();//填充listview
     }
 
@@ -167,27 +268,53 @@ public class SearchActivity extends BaseActivity {
 
     private void search() {
         try {
-            String state = thSearch.getCurrentTabTag();
-            String station = tvSelectedStation.getText().toString().equals(mAllStation) ? null : tvSelectedStation.getText().toString();
-            String orgname = tvSelectedOrgname.getText().toString().equals(mAllOrgname) ? null : tvSelectedOrgname.getText().toString();
-            String key = null;
-            if (svSearch != null) {//search()如在菜单生成前调用就会null
-                key = svSearch.getQuery().toString();
-            }
-
-            long start = System.nanoTime();
-            if (mCursor != null) mCursor.close();
-            mCursor = (new MyData()).queryDevice(Integer.valueOf(state), station, orgname, key);
 //            Log.e(TAG,"查询时间："+String.valueOf(System.nanoTime()-start));
 //            List<HashMap<String, Object>> mapList = (new MyData()).loadDevice();效率太低不能用
 //            SimpleAdapter adapter = new SimpleAdapter(this.getContext(), mapList, R.layout.item_device, from, to);
-            String[] from = {"code", "station", "orgname", "type", "name", "producer", "model", "online"};
-            int[] to = {R.id.tvCode, R.id.tvStation, R.id.tvOrgname, R.id.tvType, R.id.tvName, R.id.tvProducer, R.id.tvModel, R.id.tvOnline};
-            SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item_device, mCursor, from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+            mState = Integer.valueOf(thSearch.getCurrentTabTag());
+            mStation = tvSelectedStation.getText().toString().equals(mAllStation) ? null : tvSelectedStation.getText().toString();
+            mOrgname = tvSelectedOrgname.getText().toString().equals(mAllOrgname) ? null : tvSelectedOrgname.getText().toString();
+            mKey = null;
+            if (svSearch != null) {//search()如在菜单生成前调用就会null
+                mKey = svSearch.getQuery().toString();
+            }
 
-            tvHeader.setText(getString(R.string.hint_searchresult, adapter.getCount()));
-            lvDevice.setAdapter(adapter);
+//            long start = System.nanoTime();
 //            Log.e(TAG,"填充时间："+String.valueOf(System.nanoTime()-start));
+
+//            if (mCursor != null) mCursor.close();
+//            mCursor = (new MyData()).queryDevice(Integer.valueOf(mState), mStation, mOrgname, mKey);
+//            String[] from = {"code", "station", "orgname", "type", "name", "producer", "model", "online"};
+//            int[] to = {R.id.tvCode, R.id.tvStation, R.id.tvOrgname, R.id.tvType, R.id.tvName, R.id.tvProducer, R.id.tvModel, R.id.tvOnline};
+//            SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item_device, mCursor, from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+//            lvDevice.setAdapter(adapter);
+
+//            MyData myData = new MyData();
+//            tvHeader.setText(getString(R.string.hint_searchresult, myData.countDevice(mState, mStation, mOrgname, mKey)));
+//            List<Device> list = myData.loadDevice(0, MAXROWS, mState, mStation, mOrgname, mKey);
+//            mAdapter.getList().clear();
+//            mAdapter.getList().addAll(list);
+//            lvDevice.setAdapter(mAdapter);
+
+            new Thread() {
+                @Override
+                public void run() {
+                    MyData myData = new MyData();
+                    //统计各种状态的符合数量
+                    for (int i = 0; i < mStates.length; i++) {
+                        long count = myData.countDevice(i, mStation, mOrgname, mKey);
+                        mStates[i] = getResources().getStringArray(R.array.states)[i] + "\n(" + count + ")";
+                    }
+                    //加载前50条数据
+                    List<Device> list = myData.loadDevice(0, MAXROWS, mState, mStation, mOrgname, mKey);
+                    mAdapter.getList().clear();
+                    if( list!=null ) {
+                        mAdapter.getList().addAll(list);
+                    }
+                    mHandler.sendEmptyMessage(0);
+                }
+            }.start();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -196,6 +323,7 @@ public class SearchActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_search, menu);
+        //实现搜索功能
         MenuItem menuItem = menu.findItem(R.id.action_search);//
         svSearch = (SearchView) MenuItemCompat.getActionView(menuItem);//加载searchview
         svSearch.setSubmitButtonEnabled(true);//设置是否显示搜索按钮
@@ -231,5 +359,75 @@ public class SearchActivity extends BaseActivity {
         if (mCursor != null) mCursor.close();
         super.onDestroy();
     }
+
+
+    //以下为改进ListView加载而新增
+    private class DeviceAdapter extends BaseAdapter {
+        private List<Device> mDeviceList = new ArrayList<>();
+        private int[] colors = {R.color.white, R.color.lightest_gray};//隔行颜色
+
+        public List<Device> getList() {
+            return mDeviceList;
+        }
+
+        @Override
+        public int getCount() {
+            return mDeviceList.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return mDeviceList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return mDeviceList.get(position).id;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder;//用holder可免去重复findView的过程，提高效率;不用也行
+            if (convertView == null) {
+                convertView = SearchActivity.this.getLayoutInflater().inflate(R.layout.item_device, null);
+                holder = new ViewHolder();
+                holder.tvName = ((TextView) convertView.findViewById(R.id.tvName));
+                holder.tvCode = ((TextView) convertView.findViewById(R.id.tvCode));
+                holder.tvStation = ((TextView) convertView.findViewById(R.id.tvStation));
+                holder.tvOrgname = ((TextView) convertView.findViewById(R.id.tvOrgname));
+                holder.tvType = ((TextView) convertView.findViewById(R.id.tvType));
+                holder.tvProducer = ((TextView) convertView.findViewById(R.id.tvProducer));
+                holder.tvModel = ((TextView) convertView.findViewById(R.id.tvModel));
+                holder.tvOnline = ((TextView) convertView.findViewById(R.id.tvOnline));
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder) convertView.getTag();
+            }
+            Device device = mDeviceList.get(position);
+            holder.tvName.setText(device.name);
+            holder.tvCode.setText(device.code);
+            holder.tvStation.setText(device.station);
+            holder.tvOrgname.setText(device.orgname);
+            holder.tvType.setText(device.type);
+            holder.tvProducer.setText(device.producer);
+            holder.tvModel.setText(device.model);
+            holder.tvOnline.setText(device.online);
+            //隔行换色
+            convertView.setBackgroundResource(colors[position % 2]);
+            return convertView;
+        }
+    }
+
+    static class ViewHolder {
+        public TextView tvName;
+        public TextView tvCode;
+        public TextView tvStation;
+        public TextView tvOrgname;
+        public TextView tvType;
+        public TextView tvProducer;
+        public TextView tvModel;
+        public TextView tvOnline;
+    }
+
 
 }

@@ -7,7 +7,7 @@ import org.xutils.db.annotation.Table;
  * 设备表
  */
 @Table(name = "device"
-        ,onCreated = "CREATE UNIQUE INDEX code_unique ON Device(code)") //为表创建code唯一索引
+        ,onCreated = "CREATE UNIQUE INDEX code_unique ON Device(code);CREATE INDEX stateindex ON Device(state)") //为表创建code唯一索引
 public class Device {
 
     @Column(name = "id", isId = true, autoGen = true)//自增id
