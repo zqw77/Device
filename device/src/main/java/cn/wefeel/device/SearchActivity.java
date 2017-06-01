@@ -129,7 +129,7 @@ public class SearchActivity extends BaseActivity {
                 builder.show();
             }
         });
-        //
+        //初始化列表
         lvDevice = (ListView) this.findViewById(R.id.lvDevice);
         lvDevice.setEmptyView(this.findViewById(R.id.tvNoDevice));
         lvDevice.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -151,7 +151,7 @@ public class SearchActivity extends BaseActivity {
 //        lvDevice.addHeaderView(tvHeader);
 
         /**
-         * "加载项"布局，此布局被添加到ListView的Footer中。
+         * 初始化"加载项"布局，此布局被添加到ListView的Footer中。
          */
         final LinearLayout mLoadLayout = new LinearLayout(this);
         mLoadLayout.setMinimumHeight(60);
@@ -175,7 +175,7 @@ public class SearchActivity extends BaseActivity {
 //        lvDevice.addFooterView(mLoadLayout);
 
 
-        //显示tab标签
+        //初始化tab标签
         thSearch = (TabHost) findViewById(R.id.thSearch);
         thSearch.setup();
         for (int i = 1; i < mStates.length; i++) {
@@ -205,18 +205,31 @@ public class SearchActivity extends BaseActivity {
 
                     lvDevice.addFooterView(mLoadLayout);//显示加载中
                     final AbsListView myview = view;
-                    //可以不用线程直接执行，没啥影响
-                    new Handler().postDelayed(new Runnable() {
+                    new Thread(){
                         @Override
                         public void run() {
                             MyData myData = new MyData();
                             List<Device> list = myData.loadDevice(myview.getCount() - 1, MAXROWS, mState, mStation, mOrgname, mKey);
                             mAdapter.getList().addAll(list);//因为加了headerview所以不能用lvDeivce.getAdapter，多次转换还不如用mAdapter
-                            mAdapter.notifyDataSetChanged();
                             isBottom = false;
-                            lvDevice.removeFooterView(mLoadLayout);//不显示加载中
+                            mHandler.sendEmptyMessage(Messages.REFRESH_LIST);
+//                            mAdapter.notifyDataSetChanged();
+//                            lvDevice.removeFooterView(mLoadLayout);//不显示加载中
+                            super.run();
                         }
-                    }, 0);//设置延时大点就能看到footerview
+                    }.start();
+                    //可以不用线程直接执行，没啥影响
+//                    new Handler().postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            MyData myData = new MyData();
+//                            List<Device> list = myData.loadDevice(myview.getCount() - 1, MAXROWS, mState, mStation, mOrgname, mKey);
+//                            mAdapter.getList().addAll(list);//因为加了headerview所以不能用lvDeivce.getAdapter，多次转换还不如用mAdapter
+//                            mAdapter.notifyDataSetChanged();
+//                            isBottom = false;
+//                            lvDevice.removeFooterView(mLoadLayout);//不显示加载中
+//                        }
+//                    }, 0);//设置延时大点就能看到footerview
                 }
             }
 
@@ -232,19 +245,22 @@ public class SearchActivity extends BaseActivity {
             }
         });
 
-        //按状态统计设备数量，用线程来操作，不会打开窗口慢
+        //处理线程中发来的消息刷新UI
         mHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-                if (msg.what == 0) {    //刷新界面
+                if (msg.what == Messages.REFRESH_ALL) {    //刷新界面
                     for (int i = 0; i < thSearch.getTabWidget().getTabCount(); i++) {
                         TextView tvTitle = (TextView) thSearch.getTabWidget().getChildTabViewAt(i).findViewById(android.R.id.title);
                         tvTitle.setText(mStates[i + 1]);
                     }
 //                    tvHeader.setText(mHeader);
                     lvDevice.setAdapter(mAdapter);
+                }else if(msg.what==Messages.REFRESH_LIST){//加载列表
+                    mAdapter.notifyDataSetChanged();
+                    lvDevice.removeFooterView(mLoadLayout);//不显示加载中
                 }
+                super.handleMessage(msg);
             }
         };
 
@@ -281,7 +297,7 @@ public class SearchActivity extends BaseActivity {
 
 //            long start = System.nanoTime();
 //            Log.e(TAG,"填充时间："+String.valueOf(System.nanoTime()-start));
-
+            //用Cursor方式填充，效率较高
 //            if (mCursor != null) mCursor.close();
 //            mCursor = (new MyData()).queryDevice(Integer.valueOf(mState), mStation, mOrgname, mKey);
 //            String[] from = {"code", "station", "orgname", "type", "name", "producer", "model", "online"};
@@ -289,13 +305,7 @@ public class SearchActivity extends BaseActivity {
 //            SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item_device, mCursor, from, to, SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 //            lvDevice.setAdapter(adapter);
 
-//            MyData myData = new MyData();
-//            tvHeader.setText(getString(R.string.hint_searchresult, myData.countDevice(mState, mStation, mOrgname, mKey)));
-//            List<Device> list = myData.loadDevice(0, MAXROWS, mState, mStation, mOrgname, mKey);
-//            mAdapter.getList().clear();
-//            mAdapter.getList().addAll(list);
-//            lvDevice.setAdapter(mAdapter);
-
+            //线程操作，用自定义Adapter和少量数据逐步填充，效率较高，实际延时与Cursor差不多
             new Thread() {
                 @Override
                 public void run() {
@@ -311,7 +321,7 @@ public class SearchActivity extends BaseActivity {
                     if( list!=null ) {
                         mAdapter.getList().addAll(list);
                     }
-                    mHandler.sendEmptyMessage(0);
+                    mHandler.sendEmptyMessage(Messages.REFRESH_ALL);
                 }
             }.start();
 
@@ -429,5 +439,9 @@ public class SearchActivity extends BaseActivity {
         public TextView tvOnline;
     }
 
+    public class Messages{
+        public static final int REFRESH_ALL=0;
+        public static final int REFRESH_LIST=1;
+    }
 
 }
