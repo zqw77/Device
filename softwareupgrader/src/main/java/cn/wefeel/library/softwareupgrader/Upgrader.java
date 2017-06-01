@@ -35,6 +35,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
+ * 2017.6.1改正下载Cancel后无法重新下载的bug.发现在华为P9上升级下载后不能安装
  * 2017.3.24是否显示提示信息由true,false改Upgrader.KEEP_SILENT和Upgrader.NO_KEEP_SILENT
  * 2017.1.31改用Android Studio环境
  * 2015.7.31更新，不再要求手机上有SD卡
@@ -57,7 +58,7 @@ public class Upgrader {
     private static ProgressBar mProgressBar;//进度条
     private static int mProgress;//进度
     private static Dialog mDownloadDialog;//提示框
-    private static boolean mIsCanceled = false;//取消更新
+    private static boolean mIsCanceled;//取消更新
 
     private static Handler mHandler;
     private static final int DOWNLOADING = 1;
@@ -286,6 +287,7 @@ public class Upgrader {
                 mIsCanceled = true;
             }
         });
+        mIsCanceled=false;
         mDownloadDialog = builder.create();
         mDownloadDialog.show();
         // 启动新线程下载软件
@@ -356,19 +358,20 @@ public class Upgrader {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {//发现上次升级中断后必须要清程序缓存才能再次升级，因此加上finally操作试试
+            } catch( Exception e){
+                e.printStackTrace();
+            } finally{//发现上次升级中断后必须要清程序缓存才能再次升级，因此加上finally操作试试
                 if (conn != null) conn.disconnect();
                 try {
                     if (fos != null) fos.close();
                 } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
             // 取消下载对话框显示
             mDownloadDialog.dismiss();
         }
     }
-
-    ;
 
     /**
      * 安装APK文件
