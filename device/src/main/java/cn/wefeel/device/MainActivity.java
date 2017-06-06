@@ -3,9 +3,10 @@ package cn.wefeel.device;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.view.View;
+import android.support.v7.app.ActionBar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -27,8 +28,10 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
 //        setContentView(R.layout.activity_main);
 
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
         MagnetImageView mvDevice = (MagnetImageView) this.findViewById(R.id.mvDevice);
         mvDevice.setOnClickIntent(new MagnetImageView.OnViewClickListener() {
 
@@ -82,29 +85,24 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_viewlog) {    //数据更新日志菜单
+        if (item.getItemId() == R.id.action_viewlog) {    //数据更新日志菜单
             //先检查是否有数据更新日志文件
-            String fullname=this.getFilesDir()+"/"+Constants.UPDATELOG_FILE_NAME;
-            if(new File(fullname).exists()) {
+            String fullName = this.getFilesDir() + "/" + Constants.UPDATELOG_FILE_NAME;
+            if (new File(fullName).exists()) {
                 //显示数据更新日志
                 Intent intent = new Intent(this, ExplorerActivity.class);
-                intent.putExtra("url", "file://"+fullname);
+                intent.putExtra("url", "file://" + fullName);
                 this.startActivity(intent);
-            }else{
+            } else {
                 Toast.makeText(this, R.string.hint_noupdatelog, Toast.LENGTH_LONG).show();
             }
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 

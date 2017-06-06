@@ -80,6 +80,7 @@
     <string name="hint_cancel">取消</string>
 
     <string name="title_share">分享一下</string>
-    <string name="subject_share">设备信息</string>
+    <string name="subject_share_device">【设备信息】</string>
+    <string name="subject_share_log">\n【维修信息】</string>
 
 </resources>

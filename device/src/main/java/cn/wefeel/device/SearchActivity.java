@@ -10,7 +10,6 @@ import android.os.Message;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.SearchView;
-import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -73,13 +72,11 @@ public class SearchActivity extends BaseActivity {
         mAllOrgname = getString(R.string.all_orgname);//"（全部车间）";
         mStates = getResources().getStringArray(R.array.states);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.barTool);
-        setSupportActionBar(toolbar);
-
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-            actionBar.setDisplayShowTitleEnabled(false);
+//            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setDisplayShowTitleEnabled(true);
+            actionBar.setSubtitle("搜索");
         }
         //选择车站按钮
         tvSelectedStation = (TextView) this.findViewById(R.id.tvSelectedStation);
@@ -205,7 +202,7 @@ public class SearchActivity extends BaseActivity {
 
                     lvDevice.addFooterView(mLoadLayout);//显示加载中
                     final AbsListView myview = view;
-                    new Thread(){
+                    new Thread() {
                         @Override
                         public void run() {
                             MyData myData = new MyData();
@@ -256,7 +253,7 @@ public class SearchActivity extends BaseActivity {
                     }
 //                    tvHeader.setText(mHeader);
                     lvDevice.setAdapter(mAdapter);
-                }else if(msg.what==Messages.REFRESH_LIST){//加载列表
+                } else if (msg.what == Messages.REFRESH_LIST) {//加载列表
                     mAdapter.notifyDataSetChanged();
                     lvDevice.removeFooterView(mLoadLayout);//不显示加载中
                 }
@@ -318,7 +315,7 @@ public class SearchActivity extends BaseActivity {
                     //加载前50条数据
                     List<Device> list = myData.loadDevice(0, MAXROWS, mState, mStation, mOrgname, mKey);
                     mAdapter.getList().clear();
-                    if( list!=null ) {
+                    if (list != null) {
                         mAdapter.getList().addAll(list);
                     }
                     mHandler.sendEmptyMessage(Messages.REFRESH_ALL);
@@ -354,15 +351,15 @@ public class SearchActivity extends BaseActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                finish();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()) {
+//            case android.R.id.home:
+//                finish();
+//                break;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @Override
     protected void onDestroy() {
@@ -439,9 +436,9 @@ public class SearchActivity extends BaseActivity {
         public TextView tvOnline;
     }
 
-    public class Messages{
-        public static final int REFRESH_ALL=0;
-        public static final int REFRESH_LIST=1;
+    public class Messages {
+        public static final int REFRESH_ALL = 0;
+        public static final int REFRESH_LIST = 1;
     }
 
 }

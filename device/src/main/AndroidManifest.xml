@@ -6,13 +6,11 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name="cn.wefeel.device.MainApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
             android:name="cn.wefeel.device.WelcomeActivity"
@@ -23,7 +21,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="cn.wefeel.device.MainActivity" />
+        <activity android:name="cn.wefeel.device.MainActivity"/>
         <activity
             android:name="cn.wefeel.device.UpdateActivity"
             android:screenOrientation="portrait" />
@@ -33,8 +31,7 @@
         <activity android:name="cn.wefeel.device.ScanActivity" />
         <activity android:name="cn.wefeel.device.DetailActivity" />
         <activity
-            android:name="cn.wefeel.device.SearchActivity"
-            android:theme="@style/AppTheme.NoActionBar" />
+            android:name="cn.wefeel.device.SearchActivity" />
         <activity android:name="cn.wefeel.device.LogActivity" />
         <activity android:name="cn.wefeel.device.ExplorerActivity" />
     </application>
