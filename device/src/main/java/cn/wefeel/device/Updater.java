@@ -18,11 +18,8 @@ import cn.wefeel.device.data.MyData;
 
 /**
  * 检查是否有新的数据并进行更新类
- *
- * @author Administrator
  */
 public class Updater {
-    private static Context mContext;//父Activity
     private static HashMap<String, String> mHashMap;//保存解析的信息
     private static String[] fileTimes = {"", ""};
 
@@ -30,8 +27,6 @@ public class Updater {
      * 用线程检查是否有新的数据并进行更新
      */
     public static void check(final Context context, final boolean isKeepSilent) {
-
-        mContext = context;
 
         Runnable runnable = new Runnable() {
             @Override
@@ -52,7 +47,7 @@ public class Updater {
 //                        Log.e(Constants.TAG,"新数据"+fileTimes[0]+ " "+fileTimes[1]);
                     }
                     if (!isKeepSilent || haveNewData)
-                        showDialog(haveNewData);    //显示对话框
+                        showDialog(context,haveNewData);    //显示对话框
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -65,27 +60,27 @@ public class Updater {
     /**
      * 显示数据更新对话框
      */
-    private static void showDialog(boolean haveNewData) {
+    private static void showDialog(final Context context, boolean haveNewData) {
         String message, positiveText, negativeText;
         if (haveNewData) {
-            message = mContext.getString(R.string.hint_downnew);
-            positiveText = mContext.getString(R.string.hint_downnew_ok);
-            negativeText = mContext.getString(R.string.hint_downnew_cancel);
+            message = context.getString(R.string.hint_downnew);
+            positiveText = context.getString(R.string.hint_downnew_ok);
+            negativeText = context.getString(R.string.hint_downnew_cancel);
         } else {
-            message = mContext.getString(R.string.hint_downagain);
-            positiveText = mContext.getString(R.string.hint_downagain_ok);
-            negativeText = mContext.getString(R.string.hint_downnew_cancel);
+            message = context.getString(R.string.hint_downagain);
+            positiveText = context.getString(R.string.hint_downagain_ok);
+            negativeText = context.getString(R.string.hint_downnew_cancel);
         }
-        Builder builder = new Builder(mContext);
+        Builder builder = new Builder(context);
         builder.setTitle(R.string.title_download);
         builder.setMessage(message);
         builder.setPositiveButton(positiveText, new OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                Intent intent = new Intent(mContext, UpdateActivity.class); //
+                Intent intent = new Intent(context, UpdateActivity.class); //
                 intent.putExtra("fileTimes", fileTimes);
-                ((MainActivity) mContext).startActivityForResult(intent, 201);
+                ((MainActivity) context).startActivityForResult(intent, 201);
             }
         });
         builder.setNegativeButton(negativeText, new OnClickListener() {
@@ -101,7 +96,7 @@ public class Updater {
     /**
      * 解析返回的页面格式，得到文件时间。页面格式见http://59.63.127.197/ncdwdbqgl/Files/TempFiles/
      */
-    public static HashMap<String, String> parseInput(InputStream inStream) throws Exception {
+    private static HashMap<String, String> parseInput(InputStream inStream) throws Exception {
         HashMap<String, String> hashMap = new HashMap<String, String>();
         String x = InputStreamToString(inStream, "UTF-8");
         String lines[] = x.split("<br>");
@@ -120,14 +115,14 @@ public class Updater {
     }
 
     /**
-     * 将InputStream转换成某种字符编码的String
+     * 将InputStream转换成encoding字符编码的String
      *
      * @param in
      * @param encoding
      * @return
      * @throws Exception
      */
-    public static String InputStreamToString(InputStream in, String encoding) throws Exception {
+    private static String InputStreamToString(InputStream in, String encoding) throws Exception {
         int BUFFER_SIZE = 4096;
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         byte[] data = new byte[BUFFER_SIZE];

@@ -9,9 +9,11 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.v4.content.FileProvider;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -35,7 +37,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 /**
- * 2017.6.1改正下载Cancel后无法重新下载的bug.发现在华为P9上升级下载后不能安装
+ * 2017.6.12解决了Android7.0下不能安装apk的问题
+ * 2017.6.1改正下载Cancel后无法重新下载的bug.发现在华为P9(Android7.0)上升级下载后不能安装
  * 2017.3.24是否显示提示信息由true,false改Upgrader.KEEP_SILENT和Upgrader.NO_KEEP_SILENT
  * 2017.1.31改用Android Studio环境
  * 2015.7.31更新，不再要求手机上有SD卡
@@ -287,7 +290,7 @@ public class Upgrader {
                 mIsCanceled = true;
             }
         });
-        mIsCanceled=false;
+        mIsCanceled = false;
         mDownloadDialog = builder.create();
         mDownloadDialog.show();
         // 启动新线程下载软件
@@ -358,9 +361,9 @@ public class Upgrader {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
-            } catch( Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
-            } finally{//发现上次升级中断后必须要清程序缓存才能再次升级，因此加上finally操作试试
+            } finally {//发现上次升级中断后必须要清程序缓存才能再次升级，因此加上finally操作试试
                 if (conn != null) conn.disconnect();
                 try {
                     if (fos != null) fos.close();
@@ -378,21 +381,31 @@ public class Upgrader {
      */
     private static void installApk() {
         //修改权限，让升级文件能够执行
-        String[] command = {"chmod", "777", mSavePath + "/" + mHashMap.get("name")};
-        ProcessBuilder builder = new ProcessBuilder(command);
-        try {
-            builder.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        File apkfile = new File(mSavePath, mHashMap.get("name"));
-        if (!apkfile.exists()) {
+//        String[] command = {"chmod", "777", mSavePath + "/" + mHashMap.get("name")};
+//        ProcessBuilder builder = new ProcessBuilder(command);
+//        try {
+//            builder.start();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        File apkFile = new File(mSavePath, mHashMap.get("name"));
+        if (!apkFile.exists()) {
             return;
         }
         // 通过Intent安装APK文件
-        Intent i = new Intent(Intent.ACTION_VIEW);
-        i.setDataAndType(Uri.parse("file://" + apkfile.toString()), "application/vnd.android.package-archive");
-        mContext.startActivity(i);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        //判断是否是AndroidN以及更高的版本 7.0以上Android权限改了
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Uri contentUri = FileProvider.getUriForFile(mContext, mContext.getApplicationContext().getPackageName() + ".provider", apkFile);
+            intent.setDataAndType(contentUri, "application/vnd.android.package-archive");
+        } else {
+            intent.setDataAndType(Uri.fromFile(apkFile), "application/vnd.android.package-archive");
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+
+//        intent.setDataAndType(Uri.parse("file://" + apkFile.toString()), "application/vnd.android.package-archive");
+        mContext.startActivity(intent);
     }
 
     /**

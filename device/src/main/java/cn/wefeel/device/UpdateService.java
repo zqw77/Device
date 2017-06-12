@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.util.JsonReader;
 import android.util.JsonToken;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,14 +31,13 @@ public class UpdateService extends Service {
     //"http://59.63.127.197/ncdwdbqgl/Files/TempFiles/log.txt"
     String[] names = {Constants.DEVICE_FILE_NAME, Constants.LOG_FILE_NAME};
     public boolean isCanceled = false;// 取消更新
-    public int isRunning = 0;
 
     @Override
     public IBinder onBind(Intent intent) {
-        return new DownloadBinder();
+        return new UpdateBinder();
     }
 
-    public class DownloadBinder extends Binder {
+    public class UpdateBinder extends Binder {
         public UpdateService getService() {
             return UpdateService.this;
         }
@@ -64,78 +64,74 @@ public class UpdateService extends Service {
         mContext = this;
     }
 
-    public void startDownload() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                isRunning = 1;
-                try {
-                    for (int i = 0; i < names.length; i++) {
-                        downloadFile(Constants.DOWNLOAD_PATH, names[i]);
-                    }
-                    onCallback.onDownloadSuccess();
-                } catch (Exception e) {
-                    onCallback.onMessage("未知错误！" + e.getLocalizedMessage() + "\n");
-                }
-                isRunning = 0;
-            }
-        }).start();
+    public boolean isRunning() {
+        if (mImportThread != null)
+            return mImportThread.isAlive();
+        return false;
     }
 
-    private void downloadFile(String url, String fileName) throws Exception {
-        onCallback.onMessage("下载" + fileName);
-        try {
-            // 创建连接
-            HttpURLConnection conn = (HttpURLConnection) new URL(url + fileName).openConnection();
-            conn.connect();
-            // 获取文件大小
-            int length = conn.getContentLength();
-            // 创建输入流
-            InputStream is = conn.getInputStream();
+    private ImportThread mImportThread;
 
-            // 改为存储在应用程序目录中
-            File dir = mContext.getDir("remote", Context.MODE_PRIVATE);
-
-            // 判断文件目录是否存在
-            if (!dir.exists()) {
-                dir.mkdir();
-            }
-            File file = new File(dir.getPath(), fileName);
-
-            FileOutputStream fos = new FileOutputStream(file);
-            int count = 0;
-            byte buf[] = new byte[4048];
-            do {
-                int numread = is.read(buf);
-                count += numread;
-                onCallback.onProgress(count * 100 / length);// 更新进度
-                if (numread <= 0) {
-                    onCallback.onMessage("完成" + fileName);
-                    fos.close();
-                    is.close();
-                    break;
-                }
-                fos.write(buf, 0, numread);// 写入文件
-            } while (!isCanceled);// 点击取消就停止下载.
-            if (isCanceled)    //如果是主动取消就删除文件
-                file.delete();
-        } catch (Exception e) {
-            throw (e);
-        }
-    }
-
-    public void startImport() {
-        ImportThread importThread = new ImportThread();
-        importThread.start();
+    public void start() {
+        mImportThread = new ImportThread();
+        mImportThread.start();
     }
 
     private class ImportThread extends Thread {
         @Override
         public void run() {
-            isRunning = 2;
+            try {
+                for (int i = 0; i < names.length; i++) {
+                    downloadFile(Constants.DOWNLOAD_PATH, names[i]);
+                }
+                onCallback.onDownloadSuccess();
+            } catch (Exception e) {
+                onCallback.onMessage("未知错误！" + e.getLocalizedMessage() + "\n");
+            }
             importDevice();
             importLog();
-            isRunning = 0;
+        }
+
+        private void downloadFile(String url, String fileName) throws Exception {
+            onCallback.onMessage("下载" + fileName);
+            try {
+                // 创建连接
+                HttpURLConnection conn = (HttpURLConnection) new URL(url + fileName).openConnection();
+                conn.connect();
+                // 获取文件大小
+                int length = conn.getContentLength();
+                // 创建输入流
+                InputStream is = conn.getInputStream();
+
+                // 改为存储在应用程序目录中
+                File dir = mContext.getDir("remote", Context.MODE_PRIVATE);
+
+                // 判断文件目录是否存在
+                if (!dir.exists()) {
+                    dir.mkdir();
+                }
+                File file = new File(dir.getPath(), fileName);
+
+                FileOutputStream fos = new FileOutputStream(file);
+                int count = 0;
+                byte buf[] = new byte[4048];
+                do {
+                    int numread = is.read(buf);
+                    count += numread;
+                    onCallback.onProgress(count * 100 / length);// 更新进度
+                    if (numread <= 0) {
+                        onCallback.onMessage("完成" + fileName);
+                        fos.close();
+                        is.close();
+                        break;
+                    }
+                    fos.write(buf, 0, numread);// 写入文件
+                } while (!isCanceled);// 点击取消就停止下载.
+                if (isCanceled)    //如果是主动取消就删除文件
+                    file.delete();
+            } catch (Exception e) {
+                throw (e);
+            }
         }
 
         private void importDevice() {
@@ -201,7 +197,7 @@ public class UpdateService extends Service {
                             String info = "保存设备数据" + String.valueOf(success) + "成功";
                             if (success != length)
                                 info += "，" + String.valueOf(amount - success) + "失败！";
-                            info+="\n耗时"+((System.currentTimeMillis() - start))/1000+"s";
+                            info += "\n耗时" + ((System.currentTimeMillis() - start)) / 1000 + "s";
                             onCallback.onMessage(info);
                         } else {
                             jsonReader.skipValue();
@@ -215,11 +211,12 @@ public class UpdateService extends Service {
                 } catch (Exception e) {
                     onCallback.onMessage("未知错误！" + e.getLocalizedMessage());
                 } finally {
-                    if (jsonReader != null)
-                        try {
-                            jsonReader.close();
-                        } catch (IOException e) {
-                        }
+                    close(jsonReader);
+//                    if (jsonReader != null)
+//                        try {
+//                            jsonReader.close();
+//                        } catch (IOException e) {
+//                        }
                 }
             }
         }
@@ -299,11 +296,20 @@ public class UpdateService extends Service {
                 } catch (Exception e) {
                     onCallback.onMessage("未知错误！" + e.getLocalizedMessage());
                 } finally {
-                    if (jsonReader != null)
-                        try {
-                            jsonReader.close();
-                        } catch (IOException e) {
-                        }
+                    close(jsonReader);
+//                    if (jsonReader != null)
+//                        try {
+//                            jsonReader.close();
+//                        } catch (IOException e) {
+//                        }
+                }
+            }
+        }
+        private void close(Closeable closeable){
+            if(closeable!=null) {
+                try {
+                    closeable.close();
+                } catch (IOException e) {
                 }
             }
         }

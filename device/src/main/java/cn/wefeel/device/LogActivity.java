@@ -38,8 +38,8 @@ public class LogActivity extends BaseActivity {
 
         listView1.setOnItemClickListener(new OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                HashMap<String, Object> map = (HashMap<String, Object>) (arg0.getItemAtPosition(arg2));
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                HashMap<String, Object> map = (HashMap<String, Object>) (parent.getItemAtPosition(position));
                 String code = (String) map.get("code");
                 //传给编辑窗口
                 Intent intent = new Intent(LogActivity.this, DetailActivity.class);

@@ -28,18 +28,19 @@ public class UpdateActivity extends BaseActivity {
     private ScrollView scrollView1;
     private ProgressBar pbDownload;
     private final int INFO = 4;
-    private final int APPENDINFO = 6;
     private final int IMPORT_BEGIN = 5;
-    private UpdateService downloadService;
+    private UpdateService mUpdateService;
     private String[] fileTimes = {"", ""};
 
     private Handler mHandler;
+    private UpdateLog mUpdateLog;
 
     private ServiceConnection mConnection = new ServiceConnection() {
+
         public void onServiceConnected(ComponentName className, IBinder binder) {
-            downloadService = ((UpdateService.DownloadBinder) binder).getService();
+            mUpdateService = ((UpdateService.UpdateBinder) binder).getService();
             //注册回调接口来接收下载进度的变化  
-            downloadService.setOnCallback(new OnCallback() {
+            mUpdateService.setOnCallback(new OnCallback() {
                 @Override
                 public void onProgress(int progress) {
                     pbDownload.setProgress(progress);
@@ -49,24 +50,31 @@ public class UpdateActivity extends BaseActivity {
                 @Override
                 public void onMessage(String message) {
                     sendMessage(INFO, message);
+                    mUpdateLog.write(message + "\n");
                 }
 
                 public void onDownloadSuccess() {
-                    sendMessage(IMPORT_BEGIN, null);
+                    sendMessage(IMPORT_BEGIN, null);//该消息已没啥用
+                    //清空数据文件的日期
+                    MyData db = new MyData();
+                    db.setParameterValue(Constants.DEVICE_FILE_NAME, "");
+                    db.setParameterValue(Constants.LOG_FILE_NAME, "");
                 }
 
                 public void onImportSuccess() {
-                    Intent intent = getIntent();
-                    fileTimes = intent.getStringArrayExtra("fileTimes");
+                    //写入当前数据文件的日期
+                    fileTimes = getIntent().getStringArrayExtra("fileTimes");
                     MyData db = new MyData();
                     db.setParameterValue(Constants.DEVICE_FILE_NAME, fileTimes[0]);
                     db.setParameterValue(Constants.LOG_FILE_NAME, fileTimes[1]);
+                    mUpdateLog.finalize();
                 }
             });
         }
 
         public void onServiceDisconnected(ComponentName arg0) {
-            downloadService = null;
+            mUpdateLog.finalize();
+            mUpdateService = null;
         }
     };
 
@@ -92,16 +100,8 @@ public class UpdateActivity extends BaseActivity {
                             }
                         });// 滚动到最后
                         break;
-                    case APPENDINFO:
-                        tvInfo.append((String) msg.obj);
-                        scrollView1.post(new Runnable() {
-                            public void run() {
-                                scrollView1.fullScroll(ScrollView.FOCUS_DOWN);
-                            }
-                        });
-                        break;
                     case IMPORT_BEGIN:
-                        downloadService.startImport();//开始导入
+//                        downloadService.start();//开始导入
                         break;
                     default:
                         break;
@@ -135,6 +135,7 @@ public class UpdateActivity extends BaseActivity {
 //		}else{
 //			confirmDownload();
 //		}
+        mUpdateLog = new UpdateLog();
         confirmDownload();
     }
 
@@ -143,7 +144,7 @@ public class UpdateActivity extends BaseActivity {
         builder.setMessage(R.string.hint_traffic)
                 .setPositiveButton(R.string.hint_traffic_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        downloadService.startDownload();//开始下载
+                        mUpdateService.start();//开始下载和导入
                     }
                 })
                 .setNegativeButton(R.string.hint_traffic_cancel, new DialogInterface.OnClickListener() {
@@ -160,18 +161,10 @@ public class UpdateActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        //写日志文件
-        try {
-            // 打开文件获取输出流，文件不存在则自动创建
-            FileOutputStream fos = openFileOutput(Constants.UPDATELOG_FILE_NAME, Context.MODE_PRIVATE);
-            fos.write(tvInfo.getText().toString().getBytes());
-            fos.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        mUpdateLog.finalize();
 
-        if (downloadService != null) {
-            downloadService.isCanceled = true;
+        if (mUpdateService != null) {
+            mUpdateService.isCanceled = true;
             unbindService(mConnection);
         }
         super.onDestroy();
@@ -188,14 +181,14 @@ public class UpdateActivity extends BaseActivity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         switch (keyCode) {
             case KeyEvent.KEYCODE_BACK:
-                if (downloadService.isRunning > 0) {
+                if (mUpdateService.isRunning()) {
                     AlertDialog.Builder build = new AlertDialog.Builder(this);
                     build.setTitle(R.string.hint_attention)
                             .setMessage(R.string.hint_download_exit)
                             .setPositiveButton(R.string.hint_ok, new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    downloadService.isCanceled = true;
+                                    mUpdateService.isCanceled = true;
                                     finish();
                                 }
                             })
@@ -213,8 +206,41 @@ public class UpdateActivity extends BaseActivity {
                 return super.onKeyDown(keyCode, event);
         }
         return false;
-
     }
 
+    /**
+     * 记录数据更新日志
+     */
+    private class UpdateLog {
+        FileOutputStream mFileOutputStream = null;
 
+        public UpdateLog() {
+            super();
+            try {//写日志文件，文件不存在则自动创建
+                mFileOutputStream = openFileOutput(Constants.UPDATELOG_FILE_NAME, Context.MODE_PRIVATE);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        public void write(String message) {
+            if (mFileOutputStream != null) {
+                try {
+                    mFileOutputStream.write(message.getBytes());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @Override
+        protected void finalize() {
+            try {
+                mFileOutputStream.close();
+                super.finalize();
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
+        }
+    }
 }
