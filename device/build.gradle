@@ -21,8 +21,8 @@ android {
         applicationId 'cn.wefeel.device'
         minSdkVersion 19
         targetSdkVersion 25
-        versionCode 14
-        versionName '2.1'
+        versionCode 15
+        versionName '2.2'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

@@ -90,7 +90,7 @@ public class DetailActivity extends BaseActivity {
             lvLog.addHeaderView(tvHeader);//加标题
             lvLog.setEmptyView(this.findViewById(R.id.tvNoLog));//无维修记录时提示
 
-            mHashMapList = (new MyData()).getLog(device.code);
+            mHashMapList = (new MyData()).getLog(device.uid);//根据uid取维修记录
             SimpleAdapter adapter = new SimpleAdapter(this, mHashMapList, // 数据源
                     R.layout.item_log, // xml实现
                     new String[]{"code", "orgname", "repairdate", "repairperson", "place", "content"}, // 对应map的Key

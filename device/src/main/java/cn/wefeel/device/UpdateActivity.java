@@ -135,7 +135,6 @@ public class UpdateActivity extends BaseActivity {
 //		}else{
 //			confirmDownload();
 //		}
-        mUpdateLog = new UpdateLog();
         confirmDownload();
     }
 
@@ -144,6 +143,7 @@ public class UpdateActivity extends BaseActivity {
         builder.setMessage(R.string.hint_traffic)
                 .setPositiveButton(R.string.hint_traffic_ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
+                        mUpdateLog = new UpdateLog();
                         mUpdateService.start();//开始下载和导入
                     }
                 })

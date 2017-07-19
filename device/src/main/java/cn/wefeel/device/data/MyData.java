@@ -87,10 +87,10 @@ public class MyData {
         return mapList;
     }
 
-    public List<HashMap<String, Object>> getLog(String code) {
+    public List<HashMap<String, Object>> getLog(String uid) {
         List<HashMap<String, Object>> mapList = new ArrayList<HashMap<String, Object>>();
         try {
-            List<Log> list = mDbManager.selector(Log.class).where("code", "=", code).findAll();
+            List<Log> list = mDbManager.selector(Log.class).where("uid", "=", uid).findAll();
             Field[] fields = Log.class.getDeclaredFields();
             for (int i = 0; i < list.size(); i++) {
                 if (!(list.get(i) instanceof Map)) {
@@ -355,6 +355,7 @@ public class MyData {
 
     public int insertDevice(ContentValues value) {
         Device device = new Device();
+        device.uid = (value.getAsString("uid"));
         device.code = (value.getAsString("code"));
         device.station = (value.getAsString("station").trim());
         device.type = (value.getAsString("type").trim());
@@ -379,6 +380,7 @@ public class MyData {
     public int insertLog(ContentValues value) {
         Log log = new Log();
         log.id = (value.getAsString("id"));
+        log.uid = (value.getAsString("uid"));
         log.code = (value.getAsString("code"));
         log.orgname = (value.getAsString("orgname").trim());
         log.repairdate = (value.getAsString("repairdate").trim());
@@ -387,5 +389,17 @@ public class MyData {
         log.content = (value.getAsString("content"));
         log.flag = (0);
         return saveLog(log);
+    }
+
+    public String getCode(String uid){
+        if(uid==null || uid=="") return "";
+        Device device = null;
+        try {
+            device = mDbManager.selector(Device.class).where("uid", "=", uid).findFirst();
+            return device.code;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }

@@ -12,6 +12,8 @@ public class Device {
 
     @Column(name = "id", isId = true, autoGen = true)//自增id
     public int id;  //xutil3也可以用private配setId和getId，但我觉得太麻烦，直接public多方便
+    @Column(name= "uid" )
+    public String uid;
     @Column(name = "code") //设备编码
     public String code;
     @Column(name = "station") //站名

@@ -10,6 +10,8 @@ import org.xutils.db.annotation.Table;
 public class Log {
     @Column(name="id",isId = true)
     public String id;
+    @Column(name= "uid" )
+    public String uid;//设备id
     @Column(name="code")
     public String code;
     @Column(name="orgname")

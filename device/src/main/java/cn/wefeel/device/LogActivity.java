@@ -29,7 +29,7 @@ public class LogActivity extends BaseActivity {
 
         SimpleAdapter adapter = new SimpleAdapter(this, list, // 数据源
                 R.layout.item_log, // xml实现
-                new String[]{"code", "orgname", "repairdate", "repairperson", "place", "content"}, // 对应map的Key
+                new String[]{"code", "orgname", "repairdate", "repairperson", "place", "content", "uid"}, // 对应map的Key
                 new int[]{R.id.tvCode, R.id.tvOrgname, R.id.tvRepairDate, R.id.tvRepairPerson, R.id.tvPlace, R.id.tvContent}); // 对应R的Id
 
         listView1.setAdapter(adapter);
@@ -40,7 +40,8 @@ public class LogActivity extends BaseActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HashMap<String, Object> map = (HashMap<String, Object>) (parent.getItemAtPosition(position));
-                String code = (String) map.get("code");
+                String uid = (String) map.get("uid");
+                String code = (new MyData()).getCode(uid);
                 //传给编辑窗口
                 Intent intent = new Intent(LogActivity.this, DetailActivity.class);
                 intent.putExtra("code", code);

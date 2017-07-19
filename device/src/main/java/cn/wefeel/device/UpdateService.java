@@ -204,8 +204,6 @@ public class UpdateService extends Service {
                         }
                     }
                     jsonReader.endObject();
-                    jsonReader.close();
-                    onCallback.onImportSuccess();
                 } catch (IOException e) {
                     onCallback.onMessage("数据文件错误！\n" + e.getLocalizedMessage());
                 } catch (Exception e) {
@@ -246,7 +244,7 @@ public class UpdateService extends Service {
                             estimate = jsonReader.nextInt();
                             interval = estimate / 100 + 1;
                         } else if (name.equals("rows")) {
-                            int success = 0, codeisnull = 0, amount = 0;
+                            int success = 0, amount = 0;
                             ContentValues values = new ContentValues();
                             jsonReader.beginArray();
                             while (jsonReader.hasNext()) {
@@ -271,10 +269,6 @@ public class UpdateService extends Service {
                                     success++;
                                 else
                                     onCallback.onMessage("导入错误：" + values.getAsString("code"));
-//				                }
-//				                else{
-//				                	codeisnull++;
-//				                }
                                 if (isCanceled)
                                     break;
                             }
@@ -290,7 +284,7 @@ public class UpdateService extends Service {
                         }
                     }
                     jsonReader.endObject();
-                    jsonReader.close();
+                    onCallback.onImportSuccess();
                 } catch (IOException e) {
                     onCallback.onMessage("数据文件错误！\n" + e.getLocalizedMessage());
                 } catch (Exception e) {

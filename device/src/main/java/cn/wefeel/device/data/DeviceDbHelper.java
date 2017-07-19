@@ -15,7 +15,7 @@ public class DeviceDbHelper {
     private DbManager.DaoConfig daoConfig;
     private static DbManager db;
     private final String DB_NAME = "device.db";    //数据库名
-    private final int VERSION = 2; //数据库版本号
+    private final int VERSION = 4; //数据库版本号
 
     private DeviceDbHelper() {
         daoConfig = new DbManager.DaoConfig()
@@ -32,10 +32,26 @@ public class DeviceDbHelper {
                     public void onUpgrade(DbManager db, int oldVersion, int newVersion) {
                         //数据库升级操作
                         Log.e(Constants.TAG,"数据库版本号升级到"+VERSION);
-                        if(oldVersion==1) {
+                        if(oldVersion<=1) {
                             try {
                                 Log.e(Constants.TAG,"oldversion="+oldVersion+"   newversion="+newVersion);
                                 db.execNonQuery("CREATE INDEX stateindex ON Device(state)");
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                        if(oldVersion<=2){
+                            try{
+                                Log.e(Constants.TAG,"oldversion="+oldVersion+"   newversion="+newVersion);
+                                db.execNonQuery("ALTER TABLE device ADD uid varchar");
+                            }catch (Exception e){
+                                e.printStackTrace();
+                            }
+                        }
+                        if(oldVersion<=3){
+                            try{
+                                Log.e(Constants.TAG,"oldversion="+oldVersion+"   newversion="+newVersion);
+                                db.execNonQuery("ALTER TABLE log ADD uid varchar");
                             }catch (Exception e){
                                 e.printStackTrace();
                             }
