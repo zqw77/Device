@@ -83,4 +83,7 @@
     <string name="subject_share_device">【设备信息】</string>
     <string name="subject_share_log">\n【维修信息】</string>
 
+    <string name="hint_turnon">开灯</string>
+    <string name="hint_turnoff">关灯</string>
+
 </resources>

@@ -129,6 +129,7 @@ public class MainActivity extends BaseActivity {
     private void startScan() {
         // 扫描操作
         IntentIntegrator integrator = new IntentIntegrator(this);////IntentIntegrator扫描二维码时默认横屏
+        integrator.setPrompt(this.getString(R.string.hint_scan));
         integrator.setOrientationLocked(false);
         integrator.setCaptureActivity(ScanActivity.class);//为了竖屏需要加这个ScanActivity，否则可直接CaptureActivity
         integrator.initiateScan();

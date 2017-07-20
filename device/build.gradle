@@ -21,8 +21,8 @@ android {
         applicationId 'cn.wefeel.device'
         minSdkVersion 19
         targetSdkVersion 25
-        versionCode 15
-        versionName '2.2'
+        versionCode 16
+        versionName '2.21'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -49,9 +49,12 @@ dependencies {
     compile 'org.xutils:xutils:3.3.40'
     compile 'com.android.support:design:25.1.0'
     compile 'com.android.support:appcompat-v7:25.1.0'
-    compile 'com.google.zxing:core:3.3.0'
+    //    compile 'com.google.zxing:core:3.3.0'
+    //    compile 'com.google.zxing:android-core:3.3.0'
+    //    compile 'com.google.zxing:android-integration:3.3.0'
+    compile 'com.journeyapps:zxing-android-embedded:3.5.0'
     //    compile 'com.journeyapps:zxing-android-integration:2.0.1@aar'
     //    compile 'com.journeyapps:zxing-android-legacy:2.0.1@aar'
-    compile 'com.journeyapps:zxing-android-embedded:3.0.2@aar'
+    //    compile 'com.journeyapps:zxing-android-embedded:3.0.2@aar'
     compile project(path: ':softwareupgrader')
 }
