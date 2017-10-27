@@ -19,6 +19,7 @@
     <color name="graywhite">#F5F5F5</color>
     <color name="grayslate">#708090</color>
     <color name="lightblue">#0083FF</color>
+    <color name="blue">#FF0000FF</color>
     
     <color name="main_green">#40AA53</color>
     <color name="main_gray">#9A9A9A</color>
@@ -51,7 +52,8 @@
     <color name="light_gray">#1a000000</color>
     <color name="lightest_gray">#0a000000</color>
     <color name="bg_touch">@color/lightest_gray</color>
-    
+    <color name="light_blue">#ffbedfff</color>
+
     <color name="main_link_text_color">#ffbedfff</color>
     <color name="timeline_clickable_text_highlighted_background">#ffbedfff</color>
     
@@ -79,8 +81,6 @@
     <color name="line_background">#ffcccccc</color>
     <color name="done_text_color_normal">#ff333333</color>
     <color name="done_text_color_disabled">#ffcccccc</color>
-    <color name="blue">#ff33cc33</color>
-    <color name="darker_blue">#ff00cc99</color>
     <color name="date_picker_text_normal">#ff999999</color>
     <color name="calendar_header">#ff999999</color>
     <color name="date_picker_view_animator">#fff2f2f2</color>

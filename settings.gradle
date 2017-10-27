@@ -1,1 +1,1 @@
-include ':device', ':softwareupgrader'
+include ':device', ':softwareupgrader', ':codescaner'

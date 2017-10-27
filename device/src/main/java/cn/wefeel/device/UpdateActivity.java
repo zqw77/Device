@@ -161,7 +161,9 @@ public class UpdateActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        mUpdateLog.finalize();
+        if(mUpdateLog!=null){
+            mUpdateLog.finalize();
+        }
 
         if (mUpdateService != null) {
             mUpdateService.isCanceled = true;
